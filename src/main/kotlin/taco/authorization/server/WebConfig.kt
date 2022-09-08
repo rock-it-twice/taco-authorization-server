@@ -13,12 +13,8 @@ class WebConfig {
     fun dataLoader(userRepo: UserRepository, encoder: PasswordEncoder): CommandLineRunner{
         return CommandLineRunner {
             // Создадим 2 тестовых ползователей
-            val userAdmin: TacoUser = TacoUser("Habuma", "12345678")
-            userAdmin.setRole(1) // присвоим роль админа
-
-            val userAdmin2: TacoUser = TacoUser("TacoChef", "tacotaco")
-            userAdmin2.setRole(1) // присвоим роль админа
-
+            val userAdmin: TacoUser = TacoUser("Habuma", "password")
+            val userAdmin2: TacoUser = TacoUser("tacochef", "password")
             // Добавим их в репозиторий
             userRepo.save(userAdmin)
             userRepo.save(userAdmin2)
