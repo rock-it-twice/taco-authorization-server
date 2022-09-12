@@ -10,8 +10,10 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 import org.springframework.core.annotation.Order
 import org.springframework.security.config.Customizer
+import org.springframework.security.config.Customizer.withDefaults
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration
+import org.springframework.security.config.annotation.web.configurers.FormLoginConfigurer
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.oauth2.core.AuthorizationGrantType
@@ -56,42 +58,42 @@ class AuthorizationServerConfig {
             .and()
             .csrf()
             .disable()
-            .formLogin(Customizer.withDefaults())
+            .formLogin(withDefaults<FormLoginConfigurer<HttpSecurity>>())
         return http.build()
     }
 
     @Bean
     fun registeredClientRepository(passwordEncoder: PasswordEncoder): RegisteredClientRepository {
-        val registeredClientRepository = InMemoryRegisteredClientRepository()
+
+        val clientId = "taco-admin-client"
+        val clientSecret = "secret"
+
         val registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
             .tokenSettings(
                 TokenSettings.builder()
-                    .accessTokenTimeToLive(Duration.ofMinutes(15))
-                    .refreshTokenTimeToLive(Duration.ofMinutes(30))
+                    .accessTokenTimeToLive(Duration.ofMinutes(5))
+                    .refreshTokenTimeToLive(Duration.ofMinutes(10))
                     .build()
             )
-            .clientId("taco-admin-client")
-            .clientSecret(passwordEncoder.encode("secret"))
+            .clientId( clientId )
+            .clientSecret(passwordEncoder.encode( clientSecret ))
             .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
             .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
             .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-            .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
             .redirectUri("http://127.0.0.1:9090/login/oauth2/code/taco-admin-client")
             .redirectUri("https://oauth.pstmn.io/v1/callback")
             .scope("writeIngredients")
             .scope("deleteIngredients")
             .scope(OidcScopes.OPENID)
-            .scope("")
             .clientSettings(
                 ClientSettings
                     .builder()
                     .requireAuthorizationConsent(true)
-                    .build())
+                    .build()
+            )
             .build()
 
-        registeredClientRepository.save(registeredClient)
-
-        return registeredClientRepository
+        return InMemoryRegisteredClientRepository(listOf(registeredClient))
     }
 
     @Bean
@@ -108,7 +110,7 @@ class AuthorizationServerConfig {
 
     @Bean
     fun providerSettings(): ProviderSettings {
-        val issuerUrl = "http://auth-server:9000"
+        val issuerUrl = "http://127.0.0.1:9000"
         return ProviderSettings.builder().issuer(issuerUrl).build()
     }
 
